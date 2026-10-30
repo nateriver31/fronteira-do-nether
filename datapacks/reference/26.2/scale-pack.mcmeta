@@ -1,0 +1,14 @@
+{
+  "pack": {
+    "description": "SurvivalPlusCore: escala Nether 1:6 — Minecraft 26.2",
+    "pack_format": 107,
+    "min_format": [
+      107,
+      1
+    ],
+    "max_format": [
+      107,
+      1
+    ]
+  }
+}

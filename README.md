@@ -18,6 +18,7 @@ O [relatório de validação](docs/VALIDACAO.md) separa os testes executados das
 - [Baixar SurvivalPlusCore-0.1.0.jar](https://github.com/nateriver31/fronteira-do-nether/raw/refs/heads/main/downloads/SurvivalPlusCore-0.1.0.jar)
 - [Arquivo e checksum no repositório](downloads/)
 - [Instalação rápida no Crafty](docs/INSTALACAO.md)
+- [Datapack de escala 1:6 para Minecraft 26.2](docs/INSTALAR-ESCALA-6.md)
 
 O ZIP do projeto contém código-fonte; ele não pode ser instalado como plugin.
 Com o servidor parado, coloque o **JAR** em `plugins/` e inicie usando Java 25.
@@ -88,8 +89,13 @@ estão acessíveis nesta máquina; a homologação dentro do servidor permanece 
 confere a razão entre `coordinate_scale` do Nether e do Overworld; para o caso
 normal, os valores são respectivamente 6 e 1.
 
-Não foi entregue um override de dimensão com propriedades vanilla presumidas.
-O gerador [tools/create_scale_datapack.py](tools/create_scale_datapack.py) copia
+Foi preparado um [pacote para o tipo padrão do Nether 26.2](docs/INSTALAR-ESCALA-6.md),
+com base nos dados extraídos dessa versão e preservando todas as propriedades da
+referência, exceto a escala. O console informado identifica Paper 26.2 build 129
+e apenas os packs internos ativos. Arquivos do servidor e customizações em memória
+ainda não foram examinados; valide em uma cópia antes de usar na produção.
+
+Para um tipo com propriedades próprias, o gerador [tools/create_scale_datapack.py](tools/create_scale_datapack.py) copia
 o JSON efetivo fornecido e modifica somente `coordinate_scale`, preservando as
 demais propriedades. Também exige um `pack.mcmeta` comprovadamente válido na
 versão exata do servidor, sem inventar o número de formato de 26.2.

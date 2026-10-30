@@ -15,12 +15,16 @@ geradores de terreno nem arquivos de regiões. O `pack.mcmeta` é copiado sem
 alterar seus bytes. O relatório `scale-provenance.json` registra hashes para
 revisão; não é conteúdo de geração do Minecraft.
 
-Não acompanha um JSON vanilla ou número de formato presumido para 26.2. Neste
-ambiente não foi possível consultar os artefatos oficiais nem os datapacks do
-servidor. Uma definição completa de uma versão anterior pode apagar propriedades
-novas ou personalizadas. **Não instale um pack especulativo.** A ferramenta
-valida estrutura básica de JSON e metadados; não certifica compatibilidade de
-versão ou a origem dos arquivos fornecidos.
+Há também um [ZIP para o tipo padrão do Nether 26.2](INSTALAR-ESCALA-6.md).
+Foi preparado após o usuário informar Paper 26.2 build 129 e mostrar somente os
+packs internos habilitados. Os dados extraídos da versão e suas revisões estão
+registrados em [SOURCES.md](../datapacks/reference/26.2/SOURCES.md). Isso não
+substitui inspecionar propriedades próprias do tipo de dimensão, se houver:
+um override substitui o recurso inteiro. O servidor real não foi executado aqui.
+
+A ferramenta valida estrutura básica de JSON e metadados; não certifica por si
+só compatibilidade de versão ou a origem dos arquivos fornecidos. Não use JSON
+de outra versão para substituir um tipo de dimensão personalizado.
 
 ## Antes de gerar
 

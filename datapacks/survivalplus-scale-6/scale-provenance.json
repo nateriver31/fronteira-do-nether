@@ -1,0 +1,12 @@
+{
+  "generator": "SurvivalPlusCore create_scale_datapack.py",
+  "dimension_type": "minecraft:the_nether",
+  "only_semantic_change": "coordinate_scale",
+  "source_coordinate_scale": 8.0,
+  "target_coordinate_scale": 6.0,
+  "source_dimension_sha256": "8f4c62cab82799d8f15ac2bfb341db06b8575ca07a50c71e4bbcf7423967f105",
+  "output_dimension_sha256": "40d0eab049bbe74b59598c008c785a10d12094e33deb3aebb08ebecd6fb5f22b",
+  "pack_mcmeta_sha256": "23af348d0e4f9d8fbd5a75ece03595facb43de3ae24f068be9cb28f4f0734da8",
+  "minecraft_version_compatibility": "not_verified_by_generator",
+  "warning": "Confirme o tipo efetivo da dimensão, a escala do Overworld e a prioridade dos packs."
+}
