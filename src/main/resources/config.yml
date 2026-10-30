@@ -1,0 +1,58 @@
+# Não altera terreno, bordas físicas ou coordinate_scale do Minecraft.
+# A saída precisa ser um portal existente, construído e aceso manualmente.
+nether-portals:
+  enabled: true
+  # Expectativa da razão coordinate_scale(Nether) / coordinate_scale(Overworld).
+  # Alterar aqui NÃO muda a escala interna. Reinicie após mudar o datapack.
+  expected-scale: 6
+
+  dimensions:
+    # Chaves dos MUNDOS carregados (World#getKey), não nomes de pastas nem
+    # necessariamente chaves dos dimension_type. /survivalplus nether status lista.
+    overworld: "minecraft:overworld"
+    nether: "minecraft:the_nether"
+
+  overworld-bounds:
+    min-x: -7500
+    max-x: 7500
+    min-z: -6500
+    max-z: 6500
+
+  nether-bounds:
+    min-x: -4096
+    max-x: 4096
+    min-z: -4096
+    max-z: 4096
+
+  portal-zone:
+    min-x: -1200
+    max-x: 1200
+    min-z: -1000
+    max-z: 1000
+
+  # Máximo 128; raio reduzido automaticamente perto dos limites.
+  # Reserva adicional fixa de 24 blocos + volume horizontal da entidade.
+  # Região inteira precisa estar previamente gerada. Não pré-gera chunks.
+  search-radius: 16
+
+  notifications:
+    titles: true
+    actionbar: true
+    sounds: true
+    cooldown-seconds: 5
+    sounds-outside: "minecraft:block.note_block.bass"
+    sounds-inside: "minecraft:block.experience_orb.pickup"
+    sound-volume: 0.7
+    sound-pitch: 1.0
+
+  messages:
+    outside-title: "&c⚠ FRONTEIRA DO NETHER"
+    outside-subtitle: "&cVocê saiu da zona de conexão!"
+    outside-chat: "&c⚠ Atenção! Você ultrapassou a fronteira de conexão do Nether. A partir daqui, os portais não funcionam. Retorne à região central para viajar entre dimensões."
+    inside-title: "&a✔ ZONA DE CONEXÃO"
+    inside-subtitle: "&aOs portais estão disponíveis novamente!"
+    blocked-nether: "&c⚠ Portal desativado! Retorne à zona de conexão do Nether."
+    blocked-overworld: "&c⚠ Não é possível utilizar este portal: seu destino está fora da zona permitida do Nether."
+    unsafe: "&c⚠ Viagem bloqueada: não há margem segura para buscar a saída. Contate a administração."
+    ungenerated: "&c⚠ Viagem bloqueada: a região de saída precisa estar previamente gerada. Contate a administração."
+    unavailable: "&c⚠ Sistema de portais indisponível. A administração precisa conferir a escala e a configuração."

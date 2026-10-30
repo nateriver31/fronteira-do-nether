@@ -1,0 +1,16 @@
+name: SurvivalPlusCore
+version: '0.1.0'
+main: br.com.survivalplus.core.SurvivalPlusCore
+api-version: '26.2'
+description: Controle de portais Nether/Overworld para Survival+.
+authors: [SurvivalPlus]
+softdepend: [Geyser-Spigot, Territorio, PvPManager, MythicMobs, LuckPerms, ChunkyBorder]
+commands:
+  survivalplus:
+    description: Administração do SurvivalPlusCore.
+    usage: /survivalplus nether <status|reload|debug>
+    permission: survivalplus.admin
+permissions:
+  survivalplus.admin:
+    description: Administrar o sistema de portais.
+    default: op
