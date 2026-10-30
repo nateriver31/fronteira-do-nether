@@ -40,7 +40,7 @@ portanto tolerância de alinhamento deve ser distinguida da razão de escala.
 | 3 | Nether (1300, 0) | Cancelada; permanece no mesmo local |
 | 4 | Nether (0, 1100) | Cancelada; permanece no mesmo local |
 | 5 | Overworld (6000, 3000), saída em Nether (1000, 500) | Viagem permitida |
-| 6 | Overworld (7400, 0), dentro do mapa, fora da correspondência da zona | Cancelada |
+| 6 | Overworld (7400, 0), com saída segura correspondente | Permitida |
 | 7 | Cruze a fronteira do Nether andando, correndo, voando e com Elytra | Um título vermelho e chat por saída |
 | 8 | Retorne à zona central | Um título verde por retorno |
 | 9 | Permaneça sobre um portal bloqueado por 20 segundos | Sem viagem; actionbar no máximo a cada cinco segundos |

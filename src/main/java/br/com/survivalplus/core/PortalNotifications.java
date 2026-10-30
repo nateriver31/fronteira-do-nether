@@ -27,7 +27,7 @@ final class PortalNotifications {
             inside.remove(player.getUniqueId());
             return;
         }
-        boolean now = s.portalZone().contains(at.getX(), at.getZ());
+        boolean now = s.connectionZone().contains(at.getX(), at.getZ());
         Boolean previous = inside.put(player.getUniqueId(), now);
         if (previous == null && now || previous != null && previous == now) return;
         String prefix = now ? "inside" : "outside";

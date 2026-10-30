@@ -15,7 +15,7 @@ O [relatório de validação](docs/VALIDACAO.md) separa os testes executados das
 
 ## Baixar e instalar
 
-- [Baixar SurvivalPlusCore-0.1.0.jar](https://github.com/nateriver31/fronteira-do-nether/raw/refs/heads/main/downloads/SurvivalPlusCore-0.1.0.jar)
+- [Baixar SurvivalPlusCore-0.2.0.jar](https://github.com/nateriver31/fronteira-do-nether/raw/refs/heads/main/downloads/SurvivalPlusCore-0.2.0.jar)
 - [Arquivo e checksum no repositório](downloads/)
 - [Instalação rápida no Crafty](docs/INSTALACAO.md)
 - [Datapack de escala 1:6 para Minecraft 26.2](docs/INSTALAR-ESCALA-6.md)
@@ -26,9 +26,19 @@ Confira `/survivalplus nether status`. Se a escala real ainda for 1:8, o sistema
 bloqueia as viagens até a configuração real da dimensão estar em 1:6; instalar o
 JAR ou editar `expected-scale` não altera essa escala.
 
+## Atualização 0.2.0
+
+Todo o Overworld configurado pode iniciar uma viagem ao Nether. A zona efetiva
+é calculada automaticamente de `overworld-bounds / expected-scale`; o bloco
+legado `portal-zone` não reduz essa área. Configurações antigas são aceitas.
+O datapack permanece o mesmo. Substitua o JAR antigo com o servidor parado; não
+deixe duas versões em `plugins/`. Ainda é necessário construir as saídas.
+Foram executados 26 testes Maven, incluindo regressões para a posição da captura
+(6499.724, 6498.256), negativos, cantos e (7400, 0). O teste real de viagem continua pendente.
+
 ## Comportamento
 
-- Nether autorizado por padrão: X de -1200 a +1200, Z de -1000 a +1000.
+- Nether autorizado: projeção de TODO o Overworld em 1:6: X ±1250 e Z ±1083,333… com os limites padrão.
 - Nether → Overworld: origem deve estar autorizada; correspondência X/Z × 6.
 - Overworld → Nether: correspondência X/Z ÷ 6 deve estar autorizada.
 - Verifica também limites configurados dos mapas e `WorldBorder` da API.
@@ -45,11 +55,10 @@ Construa e acenda manualmente as saídas existentes nos dois mundos, em locais
 seguros. Acender um portal fora da zona continua permitido, mas viajar por ele é
 bloqueado. Não há remoção de blocos, dano, retorno forçado ou barreira nova.
 
-A busca por portais é pequena e conservadora. Mantém uma margem que cobre a
-largura máxima vanilla da estrutura e o volume da entidade, exige região segura
-nos limites e recusa buscas em chunks não gerados. Uma viagem próxima da borda
-pode ser bloqueada mesmo que seu ponto central esteja autorizado. Esse
-comportamento é intencional: não se procura uma saída insegura para completar a viagem.
+A busca não exige que uma margem de 24 blocos caiba na zona de conexão. A saída
+real é validada antes da viagem, incluindo os limites e o volume da entidade.
+Viagens ainda podem falhar se não existir saída segura já construída ou se os
+chunks necessários não estiverem gerados.
 
 ## Compilar
 

@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>br.com.survivalplus</groupId>
   <artifactId>survivalplus-core</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <name>SurvivalPlusCore</name>
   <description>Controle conservador de portais em mapas personalizados.</description>
   <properties>

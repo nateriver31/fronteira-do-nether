@@ -13,6 +13,14 @@ public record PortalSettings(boolean enabled, double expectedScale, NamespacedKe
         String outsideSound, String insideSound, float volume, float pitch, Map<String, String> messages) {
     private static final String ROOT = "nether-portals.";
 
+    /** Effective zone is always the projection of the entire configured Overworld. */
+    public Bounds connectionZone() {
+        return new Bounds(overworldBounds.minX() / expectedScale,
+                overworldBounds.maxX() / expectedScale,
+                overworldBounds.minZ() / expectedScale,
+                overworldBounds.maxZ() / expectedScale).intersect(netherBounds);
+    }
+
     public static PortalSettings read(FileConfiguration c) {
         double scale = number(c, "expected-scale", 0.000001, 1000000);
         NamespacedKey overworld = key(c, "dimensions.overworld");

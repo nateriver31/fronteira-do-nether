@@ -24,6 +24,9 @@ nether-portals:
     min-z: -4096
     max-z: 4096
 
+  # Legado da versão 0.1; mantido para leitura de configurações antigas.
+  # Na versão 0.2 a zona efetiva é overworld-bounds / expected-scale.
+  # Estes quatro valores não limitam a zona efetiva.
   portal-zone:
     min-x: -1200
     max-x: 1200
@@ -31,7 +34,7 @@ nether-portals:
     max-z: 1000
 
   # Máximo 128; raio reduzido automaticamente perto dos limites.
-  # Reserva adicional fixa de 24 blocos + volume horizontal da entidade.
+  # A margem não reduz a zona de conexão; a saída final é validada separadamente.
   # Região inteira precisa estar previamente gerada. Não pré-gera chunks.
   search-radius: 16
 

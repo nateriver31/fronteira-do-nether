@@ -1,10 +1,10 @@
 # Instalar no Crafty Controller
 
-O arquivo instalável é **SurvivalPlusCore-0.1.0.jar**. O ZIP do projeto contém o
+O arquivo instalável é **SurvivalPlusCore-0.2.0.jar**. O ZIP do projeto contém o
 código-fonte; não coloque esse ZIP na pasta `plugins/`.
 
 1. Use primeiro uma cópia do servidor para homologar, com os mesmos plugins e mundos.
-2. [Baixe o JAR](https://github.com/nateriver31/fronteira-do-nether/raw/refs/heads/main/downloads/SurvivalPlusCore-0.1.0.jar).
+2. [Baixe o JAR](https://github.com/nateriver31/fronteira-do-nether/raw/refs/heads/main/downloads/SurvivalPlusCore-0.2.0.jar).
    Se o navegador abrir a página do arquivo, use o botão **Download raw file**.
 3. No Crafty, pare o servidor e aguarde o encerramento. Confirme **Paper 26.2** e
    **Java 25** na configuração de execução.

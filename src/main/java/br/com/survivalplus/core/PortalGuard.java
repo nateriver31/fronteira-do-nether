@@ -111,13 +111,13 @@ final class PortalGuard {
         if (!finite(from)) return Decision.deny("unsafe");
         try {
             // Bounds first also prevent arithmetic overflow on a malformed event.
-            if (out && !settings.portalZone().contains(from.getX(), from.getZ())) return Decision.deny("blocked-nether");
+            if (out && !settings.connectionZone().contains(from.getX(), from.getZ())) return Decision.deny("blocked-nether");
             if (!allowed(from.getWorld()).contains(from.getX(), from.getZ())) return Decision.deny("unsafe");
             double x = out ? PortalGeometry.netherToOverworld(from.getX(), status.ratio())
                     : PortalGeometry.overworldToNether(from.getX(), status.ratio());
             double z = out ? PortalGeometry.netherToOverworld(from.getZ(), status.ratio())
                     : PortalGeometry.overworldToNether(from.getZ(), status.ratio());
-            if (!out && !settings.portalZone().contains(x, z)) return Decision.deny("blocked-overworld");
+            if (!out && !settings.connectionZone().contains(x, z)) return Decision.deny("blocked-overworld");
             if (!allowed(target).contains(x, z)) return Decision.deny("unsafe");
         } catch (IllegalArgumentException e) { return Decision.deny("unsafe"); }
         return Decision.allow(0);
@@ -135,16 +135,17 @@ final class PortalGuard {
             // Initial vanilla destination may be floored. A remote target changed
             // by another plugin is not a valid application of the expected scale.
             if (Math.abs(to.getX() - expectedX) > 1.01 || Math.abs(to.getZ() - expectedZ) > 1.01) return Decision.deny("unsafe");
-            // Block-point flooring can shift a search center by almost one block.
-            // 24 covers vanilla portal width (<=21), flooring and exit offsets;
-            // entity allowance additionally protects the volume rather than just its feet.
-            double margin = 24 + horizontalHalfExtent(entity);
-            Bounds area = allowed(to.getWorld());
+            // Search need not fit inside the connection zone: the actual selected
+            // exit is checked by finalExit before any dimensional transition.
+            // Reserve entity volume at physical borders, not a blanket 24-block
+            // exclusion strip that incorrectly shrinks the usable Overworld.
+            double half = horizontalHalfExtent(entity);
+            Bounds area = physical(to.getWorld());
             OptionalInt radius = PortalGeometry.maxSafeSearchRadius(area, to.getX(), to.getZ(),
-                    Math.min(settings.searchRadius(), Math.max(0, requestedRadius)), margin);
+                    Math.min(settings.searchRadius(), Math.max(0, requestedRadius)), half);
             if (radius.isEmpty()) return Decision.deny("unsafe");
-            Bounds search = PortalGeometry.requiredSearchBounds(to.getX(), to.getZ(), radius.getAsInt(), margin);
-            if (!area.contains(search)) return Decision.deny("unsafe");
+            Bounds search = PortalGeometry.requiredSearchBounds(to.getX(), to.getZ(), radius.getAsInt(), 24 + half)
+                    .intersect(area);
             if (!previouslyGenerated(to.getWorld(), search)) return Decision.deny("ungenerated");
             return Decision.allow(radius.getAsInt());
         } catch (IllegalArgumentException e) { return Decision.deny("unsafe"); }
@@ -168,8 +169,13 @@ final class PortalGuard {
     }
 
     private Bounds allowed(World world) {
+        Bounds area = physical(world);
+        return world.getKey().equals(settings.nether()) ? area.intersect(settings.connectionZone()) : area;
+    }
+
+    private Bounds physical(World world) {
         Bounds configured;
-        if (world.getKey().equals(settings.nether())) configured = settings.netherBounds().intersect(settings.portalZone());
+        if (world.getKey().equals(settings.nether())) configured = settings.netherBounds();
         else if (world.getKey().equals(settings.overworld())) configured = settings.overworldBounds();
         else throw new IllegalArgumentException("Mundo não configurado.");
         WorldBorder border = world.getWorldBorder();

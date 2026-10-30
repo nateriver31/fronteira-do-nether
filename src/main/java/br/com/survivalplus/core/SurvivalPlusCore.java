@@ -94,7 +94,7 @@ public final class SurvivalPlusCore extends JavaPlugin {
         say(sender, "&eEsperada: 1:" + c.expectedScale() + "; real: " + (s.ratio() == null ? "indisponível" : "1:" + s.ratio()));
         say(sender, "&ecoordinate_scale: Overworld=" + s.overworldScale() + "; Nether=" + s.netherScale());
         say(sender, "&eMundos: " + c.overworld() + " ↔ " + c.nether());
-        say(sender, "&eZona Nether: " + c.portalZone());
+        say(sender, "&eZona Nether: " + c.connectionZone());
         say(sender, "&eLimites OW: " + c.overworldBounds() + "; Nether: " + c.netherBounds());
         say(sender, "&eRaio máximo: " + c.searchRadius() + "; criação automática: bloqueada.");
         if (s.problem() != null) say(sender, "&cMotivo: " + s.problem());
