@@ -1,9 +1,9 @@
 # Homologação curta
 
 Faça estes testes em uma cópia do servidor com os mesmos mundos, datapacks,
-Paper/Java, Geyser e plugins da produção. Mantenha backup. Construa previamente
-portais de saída dentro dos limites; a criação automática é desabilitada para
-preservar os mapas. Registre as coordenadas reais de entrada e saída no console
+Paper/Java, Geyser e plugins da produção. Mantenha backup. A versão 0.3 permite a
+criação automática segura de saídas e não exige pré-geração. Registre as coordenadas
+reais de entrada e saída no console
 e marque cada resultado como passou/falhou/não executado.
 
 ## Estado da validação
@@ -21,7 +21,8 @@ de um teste no código não significa que ele passou.
 - Inicie a cópia do servidor; confirme ausência de erros de carga do datapack.
 - `/survivalplus nether status`: mundos corretos, escala real 1:6 e sistema ativo.
 - `/survivalplus nether debug`: confira chave da dimensão e coordenadas em cada mundo.
-- Instale a configuração padrão e deixe chunks dos dois mapas previamente gerados.
+- Instale a configuração padrão. Não construa antecipadamente todas as saídas:
+  a primeira viagem sem saída existente é um teste obrigatório desta versão.
 - Use permissões administrativas para os comandos; um jogador comum deve recebê-los
   como indisponíveis. Não dê bypass de portais a administradores: teleporte por
   comando é independente, viagem por portal obedece à mesma regra.
@@ -35,25 +36,31 @@ portanto tolerância de alinhamento deve ser distinguida da razão de escala.
 
 | Caso | Situação | Esperado |
 |---|---|---|
-| 1 | Nether (0, 0), saída existente correspondente | Viagem permitida |
+| 1 | Nether (0, 0), sem saída no Overworld | Vanilla cria saída segura e permite viagem |
 | 2 | Nether (1000, 500), saída em Overworld (6000, 3000) | Viagem permitida |
 | 3 | Nether (1300, 0) | Cancelada; permanece no mesmo local |
 | 4 | Nether (0, 1100) | Cancelada; permanece no mesmo local |
-| 5 | Overworld (6000, 3000), saída em Nether (1000, 500) | Viagem permitida |
+| 5 | Overworld (6000, 3000), sem saída no Nether | Vanilla cria saída segura perto de (1000, 500) e permite viagem |
 | 6 | Overworld (7400, 0), com saída segura correspondente | Permitida |
 | 7 | Cruze a fronteira do Nether andando, correndo, voando e com Elytra | Um título vermelho e chat por saída |
 | 8 | Retorne à zona central | Um título verde por retorno |
 | 9 | Permaneça sobre um portal bloqueado por 20 segundos | Sem viagem; actionbar no máximo a cada cinco segundos |
 | 10 | Saída existente fora da zona, próxima do alvo seguro | Não pode ser selecionada; cancelar se necessário |
-| 11 | Não existe saída construída | Viagem pode falhar; nenhuma estrutura é criada |
+| 11 | Não existe saída construída, área permitida e espaço seguro | Saída criada automaticamente; não exigir construção manual |
 | 12 | Fonte/destino nos quatro cantos e em coordenadas negativas | Mesma regra retangular, sem contorno pelos cantos |
 | 13 | Portal grande vanilla junto da borda | Saída inteira segura ou viagem cancelada |
 | 14 | Destino perto de `WorldBorder` menor que o limite configurado | Não ultrapassa a borda efetiva |
+| 15 | Overworld (6499.724, 6498.256), sem saída | Não bloquear por chunks não gerados ou por falta de portal manual; saída segura próxima do alvo ajustado |
+| 16 | PortalCreateEvent propõe moldura/base/limpeza fora dos limites | Cancelar criação antes de aplicar o conjunto de blocos |
+| 17 | PortalCreateEvent propõe todos os blocos inteiros dentro dos limites | Permitir se escala, origem e contexto também forem válidos |
 
 O caso (7800, 0) do pedido original já está fora do mapa planejado; não remova a
-barreira física para chegar ali. (7400, 0) verifica o mesmo bloqueio dentro do mapa.
-Pontos muito próximos da borda podem ser bloqueados pela margem conservadora,
-mesmo com o centro dentro da zona. Teste X e Z independentemente.
+barreira física para chegar ali. Na regra atual, (7400, 0) é permitido: toda a
+largura configurada do Overworld está conectada ao Nether. Pontos próximos da borda
+podem ter o alvo acomodado alguns blocos para dentro. A área não é reduzida por
+uma faixa fixa de 24 blocos. Teste X e Z independentemente, inclusive os quatro
+cantos. O Minecraft ainda pode falhar se nenhum destino/criação seguros forem
+possíveis ou outro plugin cancelar a operação.
 
 ## Estado, configuração e coexistência
 
@@ -75,9 +82,10 @@ mesmo com o centro dentro da zona. Teste X e Z independentemente.
 8. Com Território, PvPManager e demais plugins ativos, verifique que um cancelamento
    externo é respeitado. Teste claims/guerras no lado de origem e de destino;
    o plugin não concede permissões adicionais nem substitui a política desses plugins.
-9. Use chunks não gerados em uma cópia descartável: viagem deve ser recusada sem
-   disparar busca de saída. Confira arquivos/regiões e logs, sem pré-gerar novos
-   chunks para contornar a verificação.
+9. Use um destino sem chunks gerados em uma cópia descartável: **não** deve surgir
+   exigência de pré-geração. A busca/criação vanilla pode carregar/gerar chunks
+   necessários à viagem. Verifique que não há tarefa global de pré-geração nem
+   construção de saída fora dos limites. Observe o custo da primeira viagem.
 10. Reinicie a cópia e repita os casos 1, 3 e 5. Confira logs e perda/duplicação de
     entidades antes de aprovar instalação definitiva.
 

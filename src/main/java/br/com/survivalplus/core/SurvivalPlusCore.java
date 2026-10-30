@@ -90,13 +90,13 @@ public final class SurvivalPlusCore extends JavaPlugin {
     private void status(CommandSender sender) {
         PortalGuard.Status s = guard.status();
         PortalSettings c = guard.settings();
-        say(sender, "&6SurvivalPlusCore — " + (!guard.active() ? "DESATIVADO" : s.ready() ? "ATIVO" : "BLOQUEADO"));
+        say(sender, "&6SurvivalPlusCore " + getPluginMeta().getVersion() + " — " + (!guard.active() ? "DESATIVADO" : s.ready() ? "ATIVO" : "BLOQUEADO"));
         say(sender, "&eEsperada: 1:" + c.expectedScale() + "; real: " + (s.ratio() == null ? "indisponível" : "1:" + s.ratio()));
         say(sender, "&ecoordinate_scale: Overworld=" + s.overworldScale() + "; Nether=" + s.netherScale());
         say(sender, "&eMundos: " + c.overworld() + " ↔ " + c.nether());
         say(sender, "&eZona Nether: " + c.connectionZone());
         say(sender, "&eLimites OW: " + c.overworldBounds() + "; Nether: " + c.netherBounds());
-        say(sender, "&eRaio máximo: " + c.searchRadius() + "; criação automática: bloqueada.");
+        say(sender, "&eRaio Nether: " + c.searchRadius() + "; OW: " + (int) Math.min(128, Math.ceil(c.searchRadius() * c.expectedScale())) + "; criação automática: vanilla, limitada à área segura.");
         if (s.problem() != null) say(sender, "&cMotivo: " + s.problem());
         say(sender, "&7Mundos carregados: " + String.join(", ", Bukkit.getWorlds().stream().map(w -> w.getKey().toString()).toList()));
     }
@@ -108,7 +108,7 @@ public final class SurvivalPlusCore extends JavaPlugin {
         if (!guard.touchesManagedWorld(at)) { say(sender, "&7Este mundo não é controlado pelo sistema."); return; }
         if (!guard.active()) { say(sender, "&7Controle desativado; regras não aplicadas."); return; }
         PortalGuard.Decision d = guard.position(at);
-        say(sender, d.allowed() ? "&aPosição autorizada. A viagem ainda depende de saída existente, margem e chunks gerados."
+        say(sender, d.allowed() ? "&aPosição autorizada. A saída pode ser criada automaticamente dentro dos limites seguros."
                 : guard.settings().messages().get(d.message()));
         if (guard.isNether(at)) say(sender, String.format(Locale.ROOT, "&7Correspondência esperada OW: X=%.3f Z=%.3f", at.getX() * guard.settings().expectedScale(), at.getZ() * guard.settings().expectedScale()));
         else say(sender, String.format(Locale.ROOT, "&7Correspondência esperada Nether: X=%.3f Z=%.3f", at.getX() / guard.settings().expectedScale(), at.getZ() / guard.settings().expectedScale()));

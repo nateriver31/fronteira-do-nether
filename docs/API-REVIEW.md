@@ -12,8 +12,9 @@ contra o artefato publicado nem testá-lo em um servidor real.
   existe na API de 26.2.
 - [`NetherPortalBlock.java.patch`](https://github.com/PaperMC/Paper/blob/e4d6dfd1597968e78a3d405dce73d1d1f14a4b81/paper-server/patches/sources/net/minecraft/world/level/block/NetherPortalBlock.java.patch)
   confirma alvo inicial escalado e ajustado à borda, evento inicial, busca e cálculo
-  posterior da posição final. `setCanCreatePortal(false)` impede criação na ausência
-  de saída existente, tanto em `PlayerPortalEvent` quanto em `EntityPortalEvent`.
+  posterior da posição final. Ambos os eventos iniciais expõem `setCanCreatePortal`
+  e `setCreationRadius`. Na versão 0.3, a criação segue habilitada por padrão vanilla,
+  preservando eventual desativação feita por outro plugin; o raio é limitado.
 - [`PortalForcer.java.patch`](https://github.com/PaperMC/Paper/blob/e4d6dfd1597968e78a3d405dce73d1d1f14a4b81/paper-server/patches/sources/net/minecraft/world/level/portal/PortalForcer.java.patch)
   usa busca quadrada com o raio informado, consulta POIs, pode carregar chunks
   e emite `PortalCreateEvent` antes de aplicar blocos para uma saída automática.
@@ -54,12 +55,13 @@ efetivamente carregadas. Não selecionar arbitrariamente o primeiro mundo
    ajustar um alvo à borda física; esse ajuste não deve tornar uma origem
    originalmente proibida em uma viagem permitida.
 3. `PlayerPortalEvent` e `EntityPortalEvent` descrevem uma etapa anterior à busca
-   e não comprovam a saída final. Limitar a região inteira de busca, e não somente
-   testar seu centro. Deixar margem para o tamanho do portal e da entidade.
-4. Desabilitar a criação automática de saídas e cancelar `PortalCreateEvent` com
-   razão `NETHER_PAIR` nos mundos gerenciados. Isso preserva o terreno; jogadores
-   devem construir saídas manualmente. Acender uma estrutura manualmente fora
-   da zona continua permitido.
+   e não comprovam a saída final. Limitar o raio e verificar a saída efetiva; uma
+   busca que encontre uma saída proibida não autoriza a viagem.
+4. Permitir criação automática segura em `PortalCreateEvent`, razão `NETHER_PAIR`.
+   Conferir origem, escala, contexto da tentativa e **todos** os blocos propostos
+   antes de permitir sua aplicação. Moldura, base e limpeza local do fallback
+   vanilla estão incluídas na lista. Acender uma estrutura manualmente fora da
+   zona continua permitido; `FIRE` e `END_PLATFORM` não são bloqueados por essa regra.
 5. Validar o destino final nos eventos de teleporte/saída aplicáveis à versão.
    Conferir o comportamento real para jogadores e entidades, que podem seguir
    caminhos internos diferentes.
@@ -77,9 +79,11 @@ Os portais do End e os comandos administrativos ficam fora desse controle.
 
 ## Limites da integração por eventos
 
-O raio de busca não implica que somente chunks já carregados sejam usados:
-a busca vanilla pode carregar chunks. Não anunciar ausência total de geração
-sem verificar esse comportamento e a pré-geração dos mapas.
+Não é exigido que os chunks estejam previamente gerados. A busca e criação vanilla
+podem carregar/gerar chunks durante a viagem; não há tarefa de pré-geração global.
+Isso é diferente de cortar, apagar ou regenerar os mapas existentes. A criação
+local de saída pode modificar obsidiana, base e espaço livre; não se afirma que
+nenhum bloco muda quando uma nova saída é criada.
 
 Um plugin que modifica um evento depois da guarda de segurança pode alterar seu
 resultado. Prioridade `HIGHEST` e respeito a eventos já cancelados cooperam com
@@ -99,3 +103,6 @@ efetivo existente (incluindo customizações), mudar somente `coordinate_scale`,
 usar o formato confirmado da versão e revisar sobreposições de datapacks.
 Alterar o tipo de dimensão requer reinicialização e validação da escala após a
 carga; `/survivalplus nether reload` não altera registries do Minecraft.
+
+A revisão específica da criação automática na versão 0.3 está em
+[AUTO-CREATION-REVIEW.md](AUTO-CREATION-REVIEW.md).

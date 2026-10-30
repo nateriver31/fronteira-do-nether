@@ -36,10 +36,18 @@ final class PortalListener implements Listener {
         if (e.getCause() != PlayerTeleportEvent.TeleportCause.NETHER_PORTAL || !plugin.guard().active()) return;
         Location from = e.getPlayer().getLocation();
         if (!plugin.guard().touchesManagedWorld(from) && !plugin.guard().touchesManagedWorld(e.getTo())) return;
-        // Never create or clear terrain for automatic exit placement.
-        e.setCanCreatePortal(false);
         PortalGuard.Decision d = plugin.guard().initial(e.getPlayer(), from, e.getTo(), e.getSearchRadius());
         if (!d.allowed()) { e.setCancelled(true); blocked(e.getPlayer(), d); return; }
+        try {
+            Location target = plugin.guard().creationTarget(e.getPlayer(), e.getTo());
+            e.setTo(target);
+            e.setCreationRadius(plugin.guard().creationRadius(e.getPlayer(), target, e.getCreationRadius()));
+        } catch (IllegalArgumentException ex) {
+            e.setCancelled(true);
+            blocked(e.getPlayer(), PortalGuard.Decision.deny("unsafe"));
+            return;
+        }
+        // Keep another plugin's canCreatePortal=false and all cancellations.
         e.setSearchRadius(d.radius());
         remember(e.getPlayer(), from);
     }
@@ -50,9 +58,17 @@ final class PortalListener implements Listener {
         Location from = e.getEntity().getLocation();
         if (e.getPortalType() != PortalType.NETHER
                 || !plugin.guard().entityPortalInScope(from, e.getTo())) return;
-        e.setCanCreatePortal(false);
         PortalGuard.Decision d = plugin.guard().initial(e.getEntity(), from, e.getTo(), e.getSearchRadius());
         if (!d.allowed()) { e.setCancelled(true); blocked(e.getEntity(), d); return; }
+        try {
+            Location target = plugin.guard().creationTarget(e.getEntity(), e.getTo());
+            e.setTo(target);
+            e.setCreationRadius(plugin.guard().creationRadius(e.getEntity(), target, e.getCreationRadius()));
+        } catch (IllegalArgumentException ex) {
+            e.setCancelled(true);
+            blocked(e.getEntity(), PortalGuard.Decision.deny("unsafe"));
+            return;
+        }
         e.setSearchRadius(d.radius());
         remember(e.getEntity(), from);
     }
@@ -101,7 +117,17 @@ final class PortalListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void portalCreation(PortalCreateEvent e) {
         if (!plugin.guard().active() || e.getReason() != PortalCreateEvent.CreateReason.NETHER_PAIR) return;
-        if (plugin.guard().touchesManagedWorld(e.getWorld().getSpawnLocation())) e.setCancelled(true);
+        if (!plugin.guard().touchesManagedWorld(e.getWorld().getSpawnLocation())) return;
+        // Paper fires this before applying ALL proposed writes: frame, portal,
+        // fallback floor and cleared air. Never just check the portal center.
+        Attempt attempt = e.getEntity() == null ? null : attempts.get(e.getEntity().getUniqueId());
+        PortalGuard.Decision d = attempt == null || attempt.tick() != Bukkit.getCurrentTick()
+                ? PortalGuard.Decision.deny("unsafe")
+                : plugin.guard().creation(e.getEntity(), e.getWorld(), e.getBlocks());
+        if (!d.allowed()) {
+            e.setCancelled(true);
+            if (e.getEntity() != null) blocked(e.getEntity(), d);
+        }
     }
 
     private void remember(Entity entity, Location from) {

@@ -1,5 +1,5 @@
-# Não altera terreno, bordas físicas ou coordinate_scale do Minecraft.
-# A saída precisa ser um portal existente, construído e aceso manualmente.
+# Não redimensiona/regenera mapas nem altera bordas físicas ou coordinate_scale.
+# Permite a construção local da saída vanilla, incluindo obsidiana, base e espaço livre.
 nether-portals:
   enabled: true
   # Expectativa da razão coordinate_scale(Nether) / coordinate_scale(Overworld).
@@ -25,7 +25,7 @@ nether-portals:
     max-z: 4096
 
   # Legado da versão 0.1; mantido para leitura de configurações antigas.
-  # Na versão 0.2 a zona efetiva é overworld-bounds / expected-scale.
+  # Desde a versão 0.2 a zona efetiva é overworld-bounds / expected-scale.
   # Estes quatro valores não limitam a zona efetiva.
   portal-zone:
     min-x: -1200
@@ -33,9 +33,9 @@ nether-portals:
     min-z: -1000
     max-z: 1000
 
-  # Máximo 128; raio reduzido automaticamente perto dos limites.
+  # Raio no Nether (máximo 128). No Overworld: raio × escala, limitado a 128.
   # A margem não reduz a zona de conexão; a saída final é validada separadamente.
-  # Região inteira precisa estar previamente gerada. Não pré-gera chunks.
+  # Não exige pré-geração. O Minecraft carrega/gera chunks locais durante a viagem.
   search-radius: 16
 
   notifications:

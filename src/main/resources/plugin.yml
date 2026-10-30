@@ -1,5 +1,5 @@
 name: SurvivalPlusCore
-version: '0.2.0'
+version: '0.3.0'
 main: br.com.survivalplus.core.SurvivalPlusCore
 api-version: '26.2'
 description: Controle de portais Nether/Overworld para Survival+.

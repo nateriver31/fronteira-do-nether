@@ -3,12 +3,15 @@ package br.com.survivalplus.core;
 import br.com.survivalplus.core.portal.Bounds;
 import br.com.survivalplus.core.portal.PortalGeometry;
 import java.util.Objects;
-import java.util.OptionalInt;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.entity.Entity;
+import org.bukkit.block.BlockState;
 import org.bukkit.util.BoundingBox;
 
 /** All operations run on the server thread. No blocks are set and no teleports are issued. */
@@ -22,15 +25,21 @@ final class PortalGuard {
         static Decision allow(int radius) { return new Decision(true, radius, null); }
     }
 
-    private final SurvivalPlusCore plugin;
+    private final Logger logger;
+    private final Supplier<Status> statusProvider;
     private final ScaleReader scales = new ScaleReader();
     private PortalSettings settings;
     private String configurationFault;
     private String lastReported;
 
     PortalGuard(SurvivalPlusCore plugin, PortalSettings settings) {
-        this.plugin = plugin;
+        this(plugin.getLogger(), settings, null);
+    }
+
+    PortalGuard(Logger logger, PortalSettings settings, Supplier<Status> statusProvider) {
+        this.logger = logger;
         this.settings = settings;
+        this.statusProvider = statusProvider;
     }
 
     PortalSettings settings() { return settings; }
@@ -44,6 +53,7 @@ final class PortalGuard {
     void fault(String message) { configurationFault = message; }
 
     Status status() {
+        if (statusProvider != null) return statusProvider.get();
         World ow = Bukkit.getWorlds().stream().filter(w -> w.getKey().equals(settings.overworld())).findFirst().orElse(null);
         World ne = Bukkit.getWorlds().stream().filter(w -> w.getKey().equals(settings.nether())).findFirst().orElse(null);
         if (configurationFault != null) return report(new Status(ow, ne, null, null, null, "Configuração inválida: " + configurationFault));
@@ -71,8 +81,8 @@ final class PortalGuard {
         String state = !active() ? "Sistema desativado na configuração; controle de portais não aplicado."
                 : status.problem() == null ? "Escala real validada; regras de portais ativas." : status.problem();
         if (!Objects.equals(state, lastReported)) {
-            if (active() && !status.ready()) plugin.getLogger().severe(state);
-            else plugin.getLogger().info(state);
+            if (active() && !status.ready()) logger.severe(state);
+            else logger.info(state);
             lastReported = state;
         }
         return status;
@@ -135,19 +145,10 @@ final class PortalGuard {
             // Initial vanilla destination may be floored. A remote target changed
             // by another plugin is not a valid application of the expected scale.
             if (Math.abs(to.getX() - expectedX) > 1.01 || Math.abs(to.getZ() - expectedZ) > 1.01) return Decision.deny("unsafe");
-            // Search need not fit inside the connection zone: the actual selected
-            // exit is checked by finalExit before any dimensional transition.
-            // Reserve entity volume at physical borders, not a blanket 24-block
-            // exclusion strip that incorrectly shrinks the usable Overworld.
-            double half = horizontalHalfExtent(entity);
-            Bounds area = physical(to.getWorld());
-            OptionalInt radius = PortalGeometry.maxSafeSearchRadius(area, to.getX(), to.getZ(),
-                    Math.min(settings.searchRadius(), Math.max(0, requestedRadius)), half);
-            if (radius.isEmpty()) return Decision.deny("unsafe");
-            Bounds search = PortalGeometry.requiredSearchBounds(to.getX(), to.getZ(), radius.getAsInt(), 24 + half)
-                    .intersect(area);
-            if (!previouslyGenerated(to.getWorld(), search)) return Decision.deny("ungenerated");
-            return Decision.allow(radius.getAsInt());
+            // Vanilla may load/generate the local destination chunks as part of
+            // this trip. No whole-region pre-generation or prebuilt exit required.
+            // The selected exit and every proposed creation block are guarded later.
+            return Decision.allow(Math.min(searchRadius(to.getWorld()), Math.max(0, requestedRadius)));
         } catch (IllegalArgumentException e) { return Decision.deny("unsafe"); }
     }
 
@@ -162,10 +163,18 @@ final class PortalGuard {
             double ratio = state.ratio();
             double expectedX = isNether(originalFrom) ? originalFrom.getX() * ratio : originalFrom.getX() / ratio;
             double expectedZ = isNether(originalFrom) ? originalFrom.getZ() * ratio : originalFrom.getZ() / ratio;
-            double reach = settings.searchRadius() + 24 + half;
+            double reach = searchRadius(to.getWorld()) + 24 + half;
             if (Math.abs(to.getX() - expectedX) > reach || Math.abs(to.getZ() - expectedZ) > reach) return Decision.deny("unsafe");
             return allowed(to.getWorld()).contains(destination) ? Decision.allow(0) : Decision.deny("unsafe");
         } catch (IllegalArgumentException e) { return Decision.deny("unsafe"); }
+    }
+
+    int searchRadius(World destination) {
+        // Equivalent distances in both dimensions help a locally accommodated
+        // Nether exit find the original Overworld portal on the return trip.
+        double radius = settings.searchRadius() *
+                (destination.getKey().equals(settings.overworld()) ? settings.expectedScale() : 1);
+        return (int) Math.min(128, Math.ceil(radius));
     }
 
     private Bounds allowed(World world) {
@@ -196,15 +205,38 @@ final class PortalGuard {
         return at != null && Double.isFinite(at.getX()) && Double.isFinite(at.getY()) && Double.isFinite(at.getZ());
     }
 
-    private static boolean previouslyGenerated(World world, Bounds area) {
-        int minX = ((int) Math.floor(area.minX())) >> 4;
-        int maxX = ((int) Math.floor(area.maxX())) >> 4;
-        int minZ = ((int) Math.floor(area.minZ())) >> 4;
-        int maxZ = ((int) Math.floor(area.maxZ())) >> 4;
-        for (int x = minX; x <= maxX; x++) for (int z = minZ; z <= maxZ; z++) {
-            if (!world.isChunkGenerated(x, z)) return false;
-        }
-        return true;
+    /** Accommodate a vanilla exit locally, without changing the world's scale. */
+    Location creationTarget(Entity entity, Location to) {
+        double margin = 4 + horizontalHalfExtent(entity);
+        Bounds inner = allowed(to.getWorld()).inset(margin);
+        Location adjusted = to.clone();
+        adjusted.setX(Math.max(inner.minX(), Math.min(inner.maxX(), to.getX())));
+        adjusted.setZ(Math.max(inner.minZ(), Math.min(inner.maxZ(), to.getZ())));
+        return adjusted;
+    }
+
+    int creationRadius(Entity entity, Location adjustedTarget, int requestedRadius) {
+        double remaining = allowed(adjustedTarget.getWorld()).distanceToEdge(adjustedTarget.getX(), adjustedTarget.getZ())
+                - 4 - horizontalHalfExtent(entity);
+        // Floating arithmetic at an inset edge may produce a tiny negative value.
+        return (int) Math.max(0, Math.min(Math.min(16, settings.searchRadius()),
+                Math.min(Math.max(0, requestedRadius), Math.floor(Math.max(0, remaining)))));
+    }
+
+    Decision creation(Entity entity, World destination, List<BlockState> blocks) {
+        if (entity == null || blocks == null || blocks.isEmpty()) return Decision.deny("unsafe");
+        Decision origin = origin(entity.getLocation(), destination, status());
+        if (!origin.allowed()) return origin;
+        try {
+            Bounds area = allowed(destination);
+            for (BlockState block : blocks) {
+                if (block == null || !destination.equals(block.getWorld())
+                        || block.getY() < destination.getMinHeight() || block.getY() >= destination.getMaxHeight()
+                        || !area.contains(block.getX(), block.getZ())
+                        || !area.contains(block.getX() + 1.0, block.getZ() + 1.0)) return Decision.deny("unsafe");
+            }
+            return Decision.allow(0);
+        } catch (IllegalArgumentException e) { return Decision.deny("unsafe"); }
     }
 
     Decision position(Location at) {

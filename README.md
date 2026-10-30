@@ -2,12 +2,15 @@
 
 Sistema de portais Nether/Overworld para Survival+, com escala esperada **1:6**,
 zona de conexão retangular e exploração livre do restante dos mapas.
-O plugin não altera escala, terreno, biomas, estruturas, worldborder ou plugins
-existentes. O ChunkyBorder continua responsável pela barreira física.
+O plugin não corta, redimensiona, apaga nem regenera os mapas. O ChunkyBorder
+continua responsável pela barreira física. A criação normal de uma saída de portal
+pelo Minecraft pode colocar obsidiana, base e limpar espaço localmente; a versão
+0.3 permite essa operação somente dentro dos limites autorizados.
 
-**Estado desta entrega:** JAR compilado com **Java 25** e API oficial
-**Paper 26.2 build 135**; 24 testes Maven e 18 testes Python passaram. A API e o
-fluxo de portais foram conferidos no código oficial (commit identificado em
+**Build 0.3.0:** 44 testes Maven e 22 testes Python passaram.
+
+**Alvo desta entrega:** **Java 25** e API oficial **Paper 26.2 build 135**.
+A API e o fluxo de portais foram conferidos no código oficial (commit identificado em
 [docs/API-REVIEW.md](docs/API-REVIEW.md)). Não houve execução de Minecraft ou
 teste com clientes Java/Bedrock neste ambiente.
 Não instalar diretamente em produção sem os testes de [homologação](docs/TESTES.md).
@@ -15,7 +18,7 @@ O [relatório de validação](docs/VALIDACAO.md) separa os testes executados das
 
 ## Baixar e instalar
 
-- [Baixar SurvivalPlusCore-0.2.0.jar](https://github.com/nateriver31/fronteira-do-nether/raw/refs/heads/main/downloads/SurvivalPlusCore-0.2.0.jar)
+- [Baixar SurvivalPlusCore-0.3.0.jar](https://github.com/nateriver31/fronteira-do-nether/raw/refs/heads/main/downloads/SurvivalPlusCore-0.3.0.jar)
 - [Arquivo e checksum no repositório](downloads/)
 - [Instalação rápida no Crafty](docs/INSTALACAO.md)
 - [Datapack de escala 1:6 para Minecraft 26.2](docs/INSTALAR-ESCALA-6.md)
@@ -26,15 +29,21 @@ Confira `/survivalplus nether status`. Se a escala real ainda for 1:8, o sistema
 bloqueia as viagens até a configuração real da dimensão estar em 1:6; instalar o
 JAR ou editar `expected-scale` não altera essa escala.
 
-## Atualização 0.2.0
+## Atualização 0.3.0
 
 Todo o Overworld configurado pode iniciar uma viagem ao Nether. A zona efetiva
 é calculada automaticamente de `overworld-bounds / expected-scale`; o bloco
 legado `portal-zone` não reduz essa área. Configurações antigas são aceitas.
-O datapack permanece o mesmo. Substitua o JAR antigo com o servidor parado; não
-deixe duas versões em `plugins/`. Ainda é necessário construir as saídas.
-Foram executados 26 testes Maven, incluindo regressões para a posição da captura
-(6499.724, 6498.256), negativos, cantos e (7400, 0). O teste real de viagem continua pendente.
+O datapack e a configuração existentes permanecem compatíveis. Substitua o JAR
+antigo com o servidor parado; não deixe duas versões em `plugins/`.
+
+**Não é necessário construir o portal de saída nem pré-gerar os chunks.** Se não
+houver uma saída existente, o Minecraft pode criar uma automaticamente, com busca
+e criação de alcance limitado. O plugin confere os blocos propostos antes de serem
+aplicados e confere a posição final antes da viagem. Próximo das bordas, o ponto de
+busca/criação pode ser acomodado alguns blocos para dentro para caber com segurança.
+Isso mantém a escala interna 1:6; portais não precisam coincidir milimetricamente
+com a coordenada teórica porque o Minecraft procura um local de saída.
 
 ## Comportamento
 
@@ -50,15 +59,17 @@ Foram executados 26 testes Maven, incluindo regressões para a posição da capt
 - Entidades seguem as restrições de portais sempre que os eventos da API
   notificam sua viagem. Não há mecanismo próprio de teleporte nem cópia de entidades.
 
-**Preservação dos mapas:** a criação automática de portais de saída é bloqueada.
-Construa e acenda manualmente as saídas existentes nos dois mundos, em locais
-seguros. Acender um portal fora da zona continua permitido, mas viajar por ele é
-bloqueado. Não há remoção de blocos, dano, retorno forçado ou barreira nova.
+**Preservação dos mapas:** nenhuma operação global é executada nos mundos. A
+única construção de saída é a do próprio Minecraft durante uma viagem permitida.
+Todos os blocos dessa operação local, inclusive base e espaço limpo pelo fallback
+vanilla, precisam caber na área autorizada. Acender um portal fora da zona continua
+permitido; viajar por ele é bloqueado, sem dano, retorno forçado ou barreira nova.
 
 A busca não exige que uma margem de 24 blocos caiba na zona de conexão. A saída
 real é validada antes da viagem, incluindo os limites e o volume da entidade.
-Viagens ainda podem falhar se não existir saída segura já construída ou se os
-chunks necessários não estiverem gerados.
+O Minecraft pode carregar ou gerar os chunks necessários à viagem; o plugin não
+faz pré-geração de regiões. Viagens ainda podem ser canceladas se a saída existente
+ou a criação proposta forem inseguras, ou se outro plugin cancelar o evento.
 
 ## Compilar
 
@@ -78,19 +89,15 @@ Use o JAR produzido em `target/` somente se a compilação e os testes passarem.
 Não substitua a dependência por uma API antiga para apresentar compatibilidade
 26.2 como comprovada. Nenhuma dependência NMS/CraftBukkit é necessária.
 
-### Validação executada nesta máquina
+### Validação
 
-- 1.106 verificações da geometria passaram (`bash scripts/test-core.sh`).
-- 18 testes Python do gerador de datapack passaram (`python3 -m unittest discover -s tools -v`).
-- JDK 25 e Maven 3.9.9 foram obtidos de fontes oficiais, com checksums verificados.
-- `mvn -B clean verify` passou com API Paper `26.2.build.135-stable`: todos os
-  listeners compilaram; 24 testes passaram, sem falhas, erros ou testes ignorados.
-  São 23 testes de configuração e uma suíte com as 1.106 verificações da geometria.
-- JAR gerado e conferido: descritor, configuração e bytecode Java 25 presentes.
-- Nenhum mundo ou arquivo real do servidor estava disponível para inspeção.
+O [relatório de validação](docs/VALIDACAO.md) registra o resultado e a contagem dos
+testes da versão atual, sem confundi-los com testes reais em Minecraft. O roteiro
+inclui regressões para (6499.724, 6498.256), negativos, cantos e (7400, 0), criação
+sem saída existente e viagens sem exigir chunks previamente gerados.
 
-O bloqueio de rede da entrega anterior foi resolvido. Os repositórios oficiais
-estão acessíveis nesta máquina; a homologação dentro do servidor permanece pendente.
+Nenhum mundo ou arquivo real do servidor foi disponibilizado para inspeção.
+A homologação no seu Paper, com os outros plugins, permanece necessária.
 
 ## Configurar a escala real
 
@@ -187,7 +194,8 @@ o estado. O cooldown padrão para tentativas bloqueadas é de cinco segundos.
   resultado. Prioridades de eventos não isolam plugins entre si. Em particular,
   `EntityPortalExitEvent` não cancela a viagem e pode alterar sua posição depois
   da guarda `EntityTeleportEvent`; plugins que usem essa saída precisam ser testados.
-- A busca vanilla pode carregar chunks previamente gerados. O plugin evita
-  iniciar uma busca em região não gerada e não pré-gera mapas.
+- A busca e criação vanilla podem carregar e gerar chunks durante a viagem. O
+  plugin limita os raios e não executa pré-geração; o custo de I/O deve ser observado
+  no servidor. Permitir a viagem não significa garantir latência zero.
 - Um JAR compilado ou testes de geometria não comprovam viagens reais. Veja
   [docs/TESTES.md](docs/TESTES.md) e [docs/API-REVIEW.md](docs/API-REVIEW.md).
